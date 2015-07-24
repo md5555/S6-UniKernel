@@ -2085,8 +2085,8 @@
 			input_booster,int_freqs = <0>;
 
 			/* Time table */
-			input_booster,head_times = <500>;
-			input_booster,tail_times = <500>;
+			input_booster,head_times = <0>;
+			input_booster,tail_times = <400>;
 			input_booster,phase_times = <0>;
 		};
 		booster_key@2 {
@@ -2105,7 +2105,7 @@
 
 			/* Time table */
 			input_booster,head_times = <0>;
-			input_booster,tail_times = <200>;
+			input_booster,tail_times = <400>;
 			input_booster,phase_times = <0>;
 		};
 		booster_key@3 {
@@ -2123,8 +2123,8 @@
 			input_booster,int_freqs = <0 0 0>;
 
 			/* Time table */
-			input_booster,head_times = <130 130 0>;
-			input_booster,tail_times = <500 500 0>;
+			input_booster,head_times = <0 0 0>;
+			input_booster,tail_times = <400 400 0>;
 			input_booster,phase_times = <0 0 0>;
 		};
 		/* If you need to add new key type, add it this position */
