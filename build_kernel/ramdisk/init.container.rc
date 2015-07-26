@@ -1,0 +1,29 @@
+on early-init
+	
+on init
+    chown system system /dev/dek_evt
+    chmod 600 /dev/dek_evt
+
+    chown system 8001 /dev/dek_req
+    chmod 660 /dev/dek_req
+
+    chown system 8001 /dev/dek_kek
+    chmod 660 /dev/dek_kek
+
+    chown system 8001 /dev/sdp_mm
+    chmod 660 /dev/sdp_mm
+
+on boot
+
+#group system log shell
+service epmlogd /system/bin/epmlogd
+    class main
+    user system
+    group system log shell
+    oneshot
+
+service sdp_cryptod /system/bin/sdp_cryptod
+    class main
+    user system
+    group system
+
