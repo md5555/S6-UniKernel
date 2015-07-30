@@ -16,11 +16,3 @@ cat /proc/deferred_initcalls
 #echo "init.sec.boot.sh: strace -tt -T -o /data/log/strace.txt -p ${pid}" > /dev/kmsg
 #strace -tt -T -o /data/log/strace.txt -p ${pid}
 
-mount -t rootfs -o remount,rw rootfs
-
-if [ -d /system/etc/init.d ]; then
-  run-parts /system/etc/init.d
-fi
-
-mount -t rootfs -o remount,ro rootfs
-

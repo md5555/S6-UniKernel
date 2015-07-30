@@ -65,13 +65,13 @@ on init
     mkdir /storage/Private 0000 system system
 
 on post-fs
-    # Set max readahead size to 128 KB
-    write /sys/block/sda/queue/read_ahead_kb 128
-    write /sys/block/sdb/queue/read_ahead_kb 128
-    write /sys/block/sdc/queue/read_ahead_kb 128
-    write /sys/block/sda/queue/read_ahead_kb 128
-    write /sys/block/vnswap0/queue/read_ahead_kb 128
-    write /sys/devices/virtual/bdi/253:0/read_ahead_kb 128
+    # Set max readahead size to 16 KB
+    write /sys/block/sda/queue/read_ahead_kb 16
+    write /sys/block/sdb/queue/read_ahead_kb 16
+    write /sys/block/sdc/queue/read_ahead_kb 16
+    write /sys/block/sda/queue/read_ahead_kb 16
+    write /sys/block/vnswap0/queue/read_ahead_kb 16
+    write /sys/devices/virtual/bdi/253:0/read_ahead_kb 16
 
 on post-fs-data
     mkdir /data/media 0770 media_rw media_rw
@@ -171,8 +171,8 @@ on post-fs-data
 on boot
     # override init.rc to keep plenty of large order chunks around
     # to improve allocation times
-#    write /proc/sys/vm/min_free_kbytes 32768
-#    write /proc/sys/vm/min_free_order_shift 1
+    write /proc/sys/vm/min_free_kbytes 32768
+    write /proc/sys/vm/min_free_order_shift 1
 
     #setprop ro.radio.noril yes
 
@@ -828,10 +828,10 @@ on property:ro.debuggable=1
     write /sys/module/kgdboc/parameters/kgdboc ttyFIQ1
     write /sys/module/fiq_debugger/parameters/kgdb_enable 1
 
-# Use dirty_bytes in case of 64-bit AP: 60/20MB
+# Use dirty_bytes in case of 64-bit AP: 128/72MB
 on property:sys.boot_completed=1
-    write /proc/sys/vm/dirty_bytes 62914560
-    write /proc/sys/vm/dirty_background_bytes 20971520
+    write /proc/sys/vm/dirty_bytes 134217728
+    write /proc/sys/vm/dirty_background_bytes 75497472
 
 # Activate Background Compaction
 on property:sys.sysctl.compact_memory=1
