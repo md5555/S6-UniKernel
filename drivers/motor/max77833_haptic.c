@@ -23,6 +23,7 @@
 #include <linux/mfd/max77833-private.h>
 #include <plat/devs.h>
 #include <linux/sec_sysfs.h>
+#include <linux/variant_detection.h>
 
 #define TEST_MODE_TIME 10000
 
@@ -281,7 +282,11 @@ static struct max77833_haptic_platform_data *of_max77833_haptic_dt(struct device
 
 	printk("%s : start dt parsing\n", __func__);
 
-	np_haptic = of_find_node_by_name(np_root, "haptic");
+	if (variant_edge == IS_EDGE) {
+		np_haptic = of_find_node_by_name(np_root, "haptic");
+	} else {
+		np_haptic = of_find_node_by_name(np_root, "hapticF");
+	}
 	if (np_haptic == NULL) {
 		pr_err("[VIB] %s : error to get dt node\n", __func__);
 		goto err_parsing_dt;

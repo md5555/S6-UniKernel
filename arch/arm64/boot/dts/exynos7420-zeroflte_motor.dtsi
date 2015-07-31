@@ -10,8 +10,13 @@
 */
 
 / {
-	haptic {
+	hapticF {
+		status = "okay";
+		haptic,max_timeout = <10000>;
 		haptic,duty = <33175>;
 		haptic,period = <33510>;
+		haptic,reg2 = <0x82>;
+		haptic,pwm_id = <1>;
+		haptic,regulator_name = "VCC_MOTOR_3.0";
 	};
 };

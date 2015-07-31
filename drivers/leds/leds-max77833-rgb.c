@@ -26,6 +26,7 @@
 #include <linux/uaccess.h>
 #include <linux/regmap.h>
 #include <linux/sec_sysfs.h>
+#include <linux/variant_detection.h>
 
 #define SEC_LED_SPECIFIC
 
@@ -365,7 +366,11 @@ static struct max77833_rgb_platform_data
 	if (unlikely(pdata == NULL))
 		return ERR_PTR(-ENOMEM);
 
-	np = of_find_node_by_name(nproot, "rgb");
+	if (variant_edge == IS_EDGE) {
+		np = of_find_node_by_name(nproot, "rgb");
+	} else {
+		np = of_find_node_by_name(nproot, "rgbF");
+	}
 	if (unlikely(np == NULL)) {
 		dev_err(dev, "rgb node not found\n");
 		devm_kfree(dev, pdata);
