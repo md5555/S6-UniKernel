@@ -10,8 +10,10 @@
 */
 
 / {
-	rgb {
+	rgbF {
 		device_type = <1>;
+		rgb-name = "led_w", "led_r", "led_g", "led_b";
+
 		normal_powermode_current = <10>;
 		low_powermode_current = <2>;
 		br_ratio_r = <450>;
