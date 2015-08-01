@@ -619,12 +619,18 @@
 					regulator-max-microvolt = <3300000>;
 				};
 
-				ldo22_reg: LDO22 {
+				ldo22_reg_t_w8: LDO22TW8 {
 					regulator-name = "VDD22_1P1_2MIC";
 					regulator-min-microvolt = <1100000>;
 					regulator-max-microvolt = <1100000>;
 					regulator-always-on;
 					regulator-initial-mode = <3>;
+				};
+
+				ldo22_reg_other: LDO22DEF {
+				     regulator-name = "VDD22_1P2_AP";
+				     regulator-min-microvolt = <1200000>;
+				     regulator-max-microvolt = <1200000>;
 				};
 
 				ldo23_reg: LDO23 {

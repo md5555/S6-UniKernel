@@ -30,9 +30,13 @@
 #include <mach/asv-exynos.h>
 #include <asm/io.h>
 #include <linux/mutex.h>
+#include <linux/variant_detection.h>
 
 static struct s2mps15_info *static_info;
-static struct regulator_desc regulators[][S2MPS15_REGULATOR_MAX];
+static struct regulator_desc regulators_T_W8[][S2MPS15_REGULATOR_MAX];
+static struct regulator_desc regulators_OTHER[][S2MPS15_REGULATOR_MAX];
+
+static struct regulator_desc (*regulators)[][S2MPS15_REGULATOR_MAX];
 
 struct s2mps15_info {
 	struct regulator_dev *rdev[S2MPS15_REGULATOR_MAX];
@@ -258,11 +262,11 @@ static int s2m_get_max_int_voltage(struct s2mps15_info *s2mps15)
 	int buck4_val, buck5_val, int_max;
 
 	buck4_val = s2mps15->buck4_sel
-			* regulators[s2mps15->desc_type][S2MPS15_BUCK4].uV_step
-			+ regulators[s2mps15->desc_type][S2MPS15_BUCK4].min_uV;
+			* (*regulators)[s2mps15->desc_type][S2MPS15_BUCK4].uV_step
+			+ (*regulators)[s2mps15->desc_type][S2MPS15_BUCK4].min_uV;
 	buck5_val = s2mps15->buck5_sel
-			* regulators[s2mps15->desc_type][S2MPS15_BUCK5].uV_step
-			+ regulators[s2mps15->desc_type][S2MPS15_BUCK5].min_uV;
+			* (*regulators)[s2mps15->desc_type][S2MPS15_BUCK5].uV_step
+			+ (*regulators)[s2mps15->desc_type][S2MPS15_BUCK5].min_uV;
 	int_max = buck4_val >= buck5_val ? buck4_val : buck5_val;
 	int_max += s2mps15->int_delta;
 	int_max = int_max >= s2mps15->int_vthr ? int_max : s2mps15->int_vthr;
@@ -293,8 +297,8 @@ static int s2m_set_max_int_voltage(struct regulator_dev *rdev, unsigned sel)
 
 	if (buck_val + s2mps15->int_delta > s2mps15->int_max) {
 		ret = DIV_ROUND_UP(buck_val + s2mps15->int_delta -
-		regulators[s2mps15->desc_type][S2MPS15_LDO8].min_uV,
-		regulators[s2mps15->desc_type][S2MPS15_LDO8].uV_step);
+		(*regulators)[s2mps15->desc_type][S2MPS15_LDO8].min_uV,
+		(*regulators)[s2mps15->desc_type][S2MPS15_LDO8].uV_step);
 		if (ret < 0)
 			goto out;
 
@@ -329,8 +333,8 @@ static int s2m_set_max_int_voltage(struct regulator_dev *rdev, unsigned sel)
 		if (s2mps15->int_max != int_max) {
 			s2mps15->int_max = int_max;
 			ret = DIV_ROUND_UP(int_max -
-			regulators[s2mps15->desc_type][S2MPS15_LDO8].min_uV,
-			regulators[s2mps15->desc_type][S2MPS15_LDO8].uV_step);
+			(*regulators)[s2mps15->desc_type][S2MPS15_LDO8].min_uV,
+			(*regulators)[s2mps15->desc_type][S2MPS15_LDO8].uV_step);
 			if (ret < 0)
 				goto out;
 
@@ -744,7 +748,7 @@ enum regulator_desc_type {
 	S2MPS15_DESC_TYPE1,
 };
 
-static struct regulator_desc regulators[][S2MPS15_REGULATOR_MAX] = {
+static struct regulator_desc regulators_T_W8[][S2MPS15_REGULATOR_MAX] = {
 	[S2MPS15_DESC_TYPE0] = {
 			/* name, id, ops, min_uv, uV_step, vsel_reg, enable_reg */
 		LDO_DESC("LDO1", _LDO(1), &_ldo_ops(), _LDO(_MIN2), _LDO(_STEP1), _REG(_L1CTRL), _REG(_L1CTRL), _TIME(_LDO)),
@@ -768,7 +772,93 @@ static struct regulator_desc regulators[][S2MPS15_REGULATOR_MAX] = {
 		LDO_DESC("LDO19", _LDO(19), &_ldo_ops(), _LDO(_MIN4), _LDO(_STEP2), _REG(_L19CTRL), _REG(_L19CTRL), _TIME(_LDO)),
 		LDO_DESC("LDO20", _LDO(20), &_ldo_ops(), _LDO(_MIN3), _LDO(_STEP2), _REG(_L20CTRL), _REG(_L20CTRL), _TIME(_LDO)),
 		LDO_DESC("LDO21", _LDO(21), &_ldo_ops(), _LDO(_MIN4), _LDO(_STEP2), _REG(_L21CTRL), _REG(_L21CTRL), _TIME(_LDO)),
-		LDO_DESC("LDO22", _LDO(22), &_ldo_ops(), _LDO(_MIN3), _LDO(_STEP1), _REG(_L22CTRL), _REG(_L22CTRL), _TIME(_LDO)),
+		LDO_DESC("LDO22TW8", _LDO(22), &_ldo_ops(), _LDO(_MIN3), _LDO(_STEP1), _REG(_L22CTRL), _REG(_L22CTRL), _TIME(_LDO)),
+		LDO_DESC("LDO23", _LDO(23), &_ldo_ops(), _LDO(_MIN3), _LDO(_STEP2), _REG(_L23CTRL), _REG(_L23CTRL), _TIME(_LDO)),
+		LDO_DESC("LDO24", _LDO(24), &_ldo_ops(), _LDO(_MIN4), _LDO(_STEP2), _REG(_L24CTRL), _REG(_L24CTRL), _TIME(_LDO)),
+		LDO_DESC("LDO25", _LDO(25), &_ldo_ops(), _LDO(_MIN4), _LDO(_STEP2), _REG(_L25CTRL), _REG(_L25CTRL), _TIME(_LDO)),
+		LDO_DESC("LDO26", _LDO(26), &_ldo_ops(), _LDO(_MIN3), _LDO(_STEP1), _REG(_L26CTRL), _REG(_L26CTRL), _TIME(_LDO)),
+		LDO_DESC("LDO27", _LDO(27), &_ldo_ops(), _LDO(_MIN3), _LDO(_STEP2), _REG(_L27CTRL), _REG(_L27CTRL), _TIME(_LDO)),
+		BUCK_DESC("BUCK1", _BUCK(1), &_buck_ops(), _BUCK(_MIN1), _BUCK(_STEP1), _REG(_B1CTRL2), _REG(_B1CTRL1), _TIME(_BUCK1)),
+		BUCK_DESC("BUCK2", _BUCK(2), &_buck_ops(), _BUCK(_MIN1), _BUCK(_STEP1), _REG(_B2CTRL2), _REG(_B2CTRL1), _TIME(_BUCK2)),
+		BUCK_DESC("BUCK3", _BUCK(3), &_buck_ops(), _BUCK(_MIN1), _BUCK(_STEP1), _REG(_B3CTRL2), _REG(_B3CTRL1), _TIME(_BUCK3)),
+		BUCK_DESC("BUCK4", _BUCK(4), &_buck_ops(), _BUCK(_MIN1), _BUCK(_STEP1), _REG(_B4CTRL2), _REG(_B4CTRL1), _TIME(_BUCK4)),
+		BUCK_DESC("BUCK5", _BUCK(5), &_buck_ops(), _BUCK(_MIN1), _BUCK(_STEP1), _REG(_B5CTRL2), _REG(_B5CTRL1), _TIME(_BUCK5)),
+		BUCK_DESC("BUCK6", _BUCK(6), &_buck_ops(), _BUCK(_MIN1), _BUCK(_STEP1), _REG(_B6CTRL2), _REG(_B6CTRL1), _TIME(_BUCK6)),
+		BUCK_DESC("BUCK7", _BUCK(7), &_buck_ops(), _BUCK(_MIN1), _BUCK(_STEP1), _REG(_B7CTRL2), _REG(_B7CTRL1), _TIME(_BUCK7)),
+		BUCK_DESC("BUCK8", _BUCK(8), &_buck_ops(), _BUCK(_MIN2), _BUCK(_STEP2), _REG(_B8CTRL2), _REG(_B8CTRL1), _TIME(_BUCK8)),
+		BUCK_DESC("BUCK9", _BUCK(9), &_buck_ops(), _BUCK(_MIN2), _BUCK(_STEP2), _REG(_B9CTRL2), _REG(_B9CTRL1), _TIME(_BUCK9)),
+		BUCK_DESC("BUCK10", _BUCK(10), &_buck_ops(), _BUCK(_MIN2), _BUCK(_STEP2), _REG(_B10CTRL2), _REG(_B10CTRL1), _TIME(_BUCK10)),
+		BUCK_DESC("BB", S2MPS15_BB1, &_buck_ops(), _BUCK(_MIN3), _BUCK(_STEP2), _REG(_BB1CTRL2), _REG(_BB1CTRL1), _TIME(_BB)),
+	},
+	[S2MPS15_DESC_TYPE1] = {
+			/* name, id, ops, min_uv, uV_step, vsel_reg, enable_reg */
+		LDO_DESC("LDO1", _LDO(1), &_ldo_ops(), _LDO(_MIN2), _LDO(_STEP1), _REG(_L1CTRL), _REG(_L1CTRL), _TIME(_LDO_REV1)),
+		LDO_DESC("LDO2", _LDO(2), &_ldo_ops(), _LDO(_MIN4), _LDO(_STEP2), _REG(_L2CTRL), _REG(_L2CTRL), _TIME(_LDO_REV1)),
+		LDO_DESC("LDO3", _LDO(3), &_ldo_ops(), _LDO(_MIN3), _LDO(_STEP2), _REG(_L3CTRL), _REG(_L3CTRL), _TIME(_LDO_REV1)),
+		LDO_DESC("LDO4", _LDO(4), &_ldo_ops(), _LDO(_MIN3), _LDO(_STEP1), _REG(_L4CTRL), _REG(_L4CTRL), _TIME(_LDO_REV1)),
+		LDO_DESC("LDO5", _LDO(5), &_ldo_ops(), _LDO(_MIN3), _LDO(_STEP2), _REG(_L5CTRL), _REG(_L5CTRL), _TIME(_LDO_REV1)),
+		LDO_DESC("LDO6", _LDO(6), &_ldo_ops(), _LDO(_MIN4), _LDO(_STEP2), _REG(_L6CTRL), _REG(_L6CTRL), _TIME(_LDO_REV1)),
+		LDO_DESC("LDO7", _LDO(7), &_ldo_ops(), _LDO(_MIN1_REV1), _LDO(_STEP2), _REG(_L7CTRL), _REG(_L7CTRL), _TIME(_LDO_REV1)),
+		LDO_DESC("LDO8", _LDO(8), &_ldo_ops(), _LDO(_MIN1_REV1), _LDO(_STEP2), _REG(_L8CTRL), _REG(_L8CTRL), _TIME(_LDO_REV1)),
+		LDO_DESC("LDO9", _LDO(9), &_ldo_ops(), _LDO(_MIN1_REV1), _LDO(_STEP2), _REG(_L9CTRL), _REG(_L9CTRL), _TIME(_LDO_REV1)),
+		LDO_DESC("LDO10", _LDO(10), &_ldo_ops(), _LDO(_MIN1_REV1), _LDO(_STEP2), _REG(_L10CTRL), _REG(_L10CTRL), _TIME(_LDO_REV1)),
+		LDO_DESC("LDO11", _LDO(11), &_ldo_ops(), _LDO(_MIN3), _LDO(_STEP1), _REG(_L11CTRL), _REG(_L11CTRL), _TIME(_LDO_REV1)),
+		LDO_DESC("LDO12", _LDO(12), &_ldo_ops(), _LDO(_MIN3), _LDO(_STEP1), _REG(_L12CTRL), _REG(_L12CTRL), _TIME(_LDO_REV1)),
+		LDO_DESC("LDO13", _LDO(13), &_ldo_ops(), _LDO(_MIN3), _LDO(_STEP1), _REG(_L13CTRL), _REG(_L13CTRL), _TIME(_LDO_REV1)),
+		LDO_DESC("LDO14", _LDO(14), &_ldo_ops(), _LDO(_MIN4), _LDO(_STEP2), _REG(_L14CTRL), _REG(_L14CTRL), _TIME(_LDO_REV1)),
+		LDO_DESC("LDO15", _LDO(15), &_ldo_ops(), _LDO(_MIN3), _LDO(_STEP2), _REG(_L15CTRL), _REG(_L15CTRL), _TIME(_LDO_REV1)),
+		LDO_DESC("LDO16", _LDO(16), &_ldo_ops(), _LDO(_MIN3), _LDO(_STEP2), _REG(_L16CTRL), _REG(_L16CTRL), _TIME(_LDO_REV1)),
+		LDO_DESC("LDO17", _LDO(17), &_ldo_ops(), _LDO(_MIN4), _LDO(_STEP2), _REG(_L17CTRL), _REG(_L17CTRL), _TIME(_LDO_REV1)),
+		LDO_DESC("LDO18", _LDO(18), &_ldo_ops(), _LDO(_MIN3), _LDO(_STEP2), _REG(_L18CTRL), _REG(_L18CTRL), _TIME(_LDO_REV1)),
+		LDO_DESC("LDO19", _LDO(19), &_ldo_ops(), _LDO(_MIN4), _LDO(_STEP2), _REG(_L19CTRL), _REG(_L19CTRL), _TIME(_LDO_REV1)),
+		LDO_DESC("LDO20", _LDO(20), &_ldo_ops(), _LDO(_MIN3), _LDO(_STEP2), _REG(_L20CTRL), _REG(_L20CTRL), _TIME(_LDO_REV1)),
+		LDO_DESC("LDO21", _LDO(21), &_ldo_ops(), _LDO(_MIN4), _LDO(_STEP2), _REG(_L21CTRL), _REG(_L21CTRL), _TIME(_LDO_REV1)),
+		LDO_DESC("LDO22", _LDO(22), &_ldo_ops(), _LDO(_MIN3), _LDO(_STEP1), _REG(_L22CTRL), _REG(_L22CTRL), _TIME(_LDO_REV1)),
+		LDO_DESC("LDO23", _LDO(23), &_ldo_ops(), _LDO(_MIN3), _LDO(_STEP2), _REG(_L23CTRL), _REG(_L23CTRL), _TIME(_LDO_REV1)),
+		LDO_DESC("LDO24", _LDO(24), &_ldo_ops(), _LDO(_MIN4), _LDO(_STEP2), _REG(_L24CTRL), _REG(_L24CTRL), _TIME(_LDO_REV1)),
+		LDO_DESC("LDO25", _LDO(25), &_ldo_ops(), _LDO(_MIN4), _LDO(_STEP2), _REG(_L25CTRL_REV1), _REG(_L25CTRL_REV1), _TIME(_LDO_REV1)),
+		LDO_DESC("LDO26", _LDO(26), &_ldo_ops(), _LDO(_MIN3), _LDO(_STEP1), _REG(_L26CTRL_REV1), _REG(_L26CTRL_REV1), _TIME(_LDO_REV1)),
+		LDO_DESC("LDO27", _LDO(27), &_ldo_ops(), _LDO(_MIN3), _LDO(_STEP2), _REG(_L27CTRL), _REG(_L27CTRL), _TIME(_LDO_REV1)),
+		BUCK_DESC("BUCK1", _BUCK(1), &_buck_ops(), _BUCK(_MIN1_REV1), _BUCK(_STEP1), _REG(_B1CTRL2), _REG(_B1CTRL1), _TIME(_BUCK1_REV1)),
+		BUCK_DESC("BUCK2", _BUCK(2), &_buck_ops(), _BUCK(_MIN1_REV1), _BUCK(_STEP1), _REG(_B2CTRL2), _REG(_B2CTRL1), _TIME(_BUCK2_REV1)),
+		BUCK_DESC("BUCK3", _BUCK(3), &_buck_ops(), _BUCK(_MIN1_REV1), _BUCK(_STEP1), _REG(_B3CTRL2), _REG(_B3CTRL1), _TIME(_BUCK3_REV1)),
+		BUCK_DESC("BUCK4", _BUCK(4), &_buck_ops(), _BUCK(_MIN1_REV1), _BUCK(_STEP1), _REG(_B4CTRL2), _REG(_B4CTRL1), _TIME(_BUCK4_REV1)),
+		BUCK_DESC("BUCK5", _BUCK(5), &_buck_ops(), _BUCK(_MIN1_REV1), _BUCK(_STEP1), _REG(_B5CTRL2), _REG(_B5CTRL1), _TIME(_BUCK5_REV1)),
+		BUCK_DESC("BUCK6", _BUCK(6), &_buck_ops(), _BUCK(_MIN1_REV1), _BUCK(_STEP1), _REG(_B6CTRL2), _REG(_B6CTRL1), _TIME(_BUCK6_REV1)),
+		BUCK_DESC("BUCK7", _BUCK(7), &_buck_ops(), _BUCK(_MIN1_REV1), _BUCK(_STEP1), _REG(_B7CTRL2), _REG(_B7CTRL1), _TIME(_BUCK7_REV1)),
+		BUCK_DESC("BUCK8", _BUCK(8), &_buck_ops(), _BUCK(_MIN2), _BUCK(_STEP2), _REG(_B8CTRL2), _REG(_B8CTRL1), _TIME(_BUCK8_REV1)),
+		BUCK_DESC("BUCK9", _BUCK(9), &_buck_ops(), _BUCK(_MIN2), _BUCK(_STEP2), _REG(_B9CTRL2), _REG(_B9CTRL1), _TIME(_BUCK9_REV1)),
+		BUCK_DESC("BUCK10", _BUCK(10), &_buck_ops(), _BUCK(_MIN2), _BUCK(_STEP2), _REG(_B10CTRL2), _REG(_B10CTRL1), _TIME(_BUCK10_REV1)),
+		BUCK_DESC("BB", S2MPS15_BB1, &_buck_ops(), _BUCK(_MIN3), _BUCK(_STEP2), _REG(_BB1CTRL2), _REG(_BB1CTRL1), _TIME(_BB_REV1)),
+	},
+
+};
+
+static struct regulator_desc regulators_OTHER[][S2MPS15_REGULATOR_MAX] = {
+	[S2MPS15_DESC_TYPE0] = {
+			/* name, id, ops, min_uv, uV_step, vsel_reg, enable_reg */
+		LDO_DESC("LDO1", _LDO(1), &_ldo_ops(), _LDO(_MIN2), _LDO(_STEP1), _REG(_L1CTRL), _REG(_L1CTRL), _TIME(_LDO)),
+		LDO_DESC("LDO2", _LDO(2), &_ldo_ops(), _LDO(_MIN4), _LDO(_STEP2), _REG(_L2CTRL), _REG(_L2CTRL), _TIME(_LDO)),
+		LDO_DESC("LDO3", _LDO(3), &_ldo_ops(), _LDO(_MIN3), _LDO(_STEP2), _REG(_L3CTRL), _REG(_L3CTRL), _TIME(_LDO)),
+		LDO_DESC("LDO4", _LDO(4), &_ldo_ops(), _LDO(_MIN3), _LDO(_STEP1), _REG(_L4CTRL), _REG(_L4CTRL), _TIME(_LDO)),
+		LDO_DESC("LDO5", _LDO(5), &_ldo_ops(), _LDO(_MIN3), _LDO(_STEP2), _REG(_L5CTRL), _REG(_L5CTRL), _TIME(_LDO)),
+		LDO_DESC("LDO6", _LDO(6), &_ldo_ops(), _LDO(_MIN4), _LDO(_STEP2), _REG(_L6CTRL), _REG(_L6CTRL), _TIME(_LDO)),
+		LDO_DESC("LDO7", _LDO(7), &_ldo_ops(), _LDO(_MIN1), _LDO(_STEP2), _REG(_L7CTRL), _REG(_L7CTRL), _TIME(_LDO)),
+		LDO_DESC("LDO8", _LDO(8), &_ldo_ops(), _LDO(_MIN1), _LDO(_STEP2), _REG(_L8CTRL), _REG(_L8CTRL), _TIME(_LDO)),
+		LDO_DESC("LDO9", _LDO(9), &_ldo_ops(), _LDO(_MIN1), _LDO(_STEP2), _REG(_L9CTRL), _REG(_L9CTRL), _TIME(_LDO)),
+		LDO_DESC("LDO10", _LDO(10), &_ldo_ops(), _LDO(_MIN1), _LDO(_STEP2), _REG(_L10CTRL), _REG(_L10CTRL), _TIME(_LDO)),
+		LDO_DESC("LDO11", _LDO(11), &_ldo_ops(), _LDO(_MIN3), _LDO(_STEP1), _REG(_L11CTRL), _REG(_L11CTRL), _TIME(_LDO)),
+		LDO_DESC("LDO12", _LDO(12), &_ldo_ops(), _LDO(_MIN3), _LDO(_STEP1), _REG(_L12CTRL), _REG(_L12CTRL), _TIME(_LDO)),
+		LDO_DESC("LDO13", _LDO(13), &_ldo_ops(), _LDO(_MIN3), _LDO(_STEP1), _REG(_L13CTRL), _REG(_L13CTRL), _TIME(_LDO)),
+		LDO_DESC("LDO14", _LDO(14), &_ldo_ops(), _LDO(_MIN4), _LDO(_STEP2), _REG(_L14CTRL), _REG(_L14CTRL), _TIME(_LDO)),
+		LDO_DESC("LDO15", _LDO(15), &_ldo_ops(), _LDO(_MIN3), _LDO(_STEP2), _REG(_L15CTRL), _REG(_L15CTRL), _TIME(_LDO)),
+		LDO_DESC("LDO16", _LDO(16), &_ldo_ops(), _LDO(_MIN3), _LDO(_STEP2), _REG(_L16CTRL), _REG(_L16CTRL), _TIME(_LDO)),
+		LDO_DESC("LDO17", _LDO(17), &_ldo_ops(), _LDO(_MIN4), _LDO(_STEP2), _REG(_L17CTRL), _REG(_L17CTRL), _TIME(_LDO)),
+		LDO_DESC("LDO18", _LDO(18), &_ldo_ops(), _LDO(_MIN3), _LDO(_STEP2), _REG(_L18CTRL), _REG(_L18CTRL), _TIME(_LDO)),
+		LDO_DESC("LDO19", _LDO(19), &_ldo_ops(), _LDO(_MIN4), _LDO(_STEP2), _REG(_L19CTRL), _REG(_L19CTRL), _TIME(_LDO)),
+		LDO_DESC("LDO20", _LDO(20), &_ldo_ops(), _LDO(_MIN3), _LDO(_STEP2), _REG(_L20CTRL), _REG(_L20CTRL), _TIME(_LDO)),
+		LDO_DESC("LDO21", _LDO(21), &_ldo_ops(), _LDO(_MIN4), _LDO(_STEP2), _REG(_L21CTRL), _REG(_L21CTRL), _TIME(_LDO)),
+		LDO_DESC("LDO22DEF", _LDO(22), &_ldo_ops(), _LDO(_MIN3), _LDO(_STEP1), _REG(_L22CTRL), _REG(_L22CTRL), _TIME(_LDO)),
 		LDO_DESC("LDO23", _LDO(23), &_ldo_ops(), _LDO(_MIN3), _LDO(_STEP2), _REG(_L23CTRL), _REG(_L23CTRL), _TIME(_LDO)),
 		LDO_DESC("LDO24", _LDO(24), &_ldo_ops(), _LDO(_MIN4), _LDO(_STEP2), _REG(_L24CTRL), _REG(_L24CTRL), _TIME(_LDO)),
 		LDO_DESC("LDO25", _LDO(25), &_ldo_ops(), _LDO(_MIN4), _LDO(_STEP2), _REG(_L25CTRL), _REG(_L25CTRL), _TIME(_LDO)),
@@ -914,12 +1004,12 @@ static int s2mps15_pmic_dt_parse_pdata(struct sec_pmic_dev *iodev,
 	pdata->regulators = rdata;
 	s2mps15_desc_type = SEC_PMIC_REV(iodev) ? S2MPS15_DESC_TYPE1 : S2MPS15_DESC_TYPE0;
 	for_each_child_of_node(regulators_np, reg_np) {
-		for (i = 0; i < ARRAY_SIZE(regulators[s2mps15_desc_type]); i++)
+		for (i = 0; i < ARRAY_SIZE((*regulators)[s2mps15_desc_type]); i++)
 			if (!of_node_cmp(reg_np->name,
-					regulators[s2mps15_desc_type][i].name))
+					(*regulators)[s2mps15_desc_type][i].name))
 				break;
 
-		if (i == ARRAY_SIZE(regulators[s2mps15_desc_type])) {
+		if (i == ARRAY_SIZE((*regulators)[s2mps15_desc_type])) {
 			dev_warn(iodev->dev,
 			"don't know how to configure regulator %s\n",
 			reg_np->name);
@@ -1098,10 +1188,10 @@ static int s2mps15_pmic_probe(struct platform_device *pdev)
 		config.init_data = pdata->regulators[i].initdata;
 		config.driver_data = s2mps15;
 		config.of_node = pdata->regulators[i].reg_node;
-		s2mps15->opmode[id] = regulators[s2mps15_desc_type][id].enable_mask;
+		s2mps15->opmode[id] = (*regulators)[s2mps15_desc_type][id].enable_mask;
 
 		s2mps15->rdev[i] = regulator_register(
-				&regulators[s2mps15_desc_type][id], &config);
+				&(*regulators)[s2mps15_desc_type][id], &config);
 		if (IS_ERR(s2mps15->rdev[i])) {
 			ret = PTR_ERR(s2mps15->rdev[i]);
 			dev_err(&pdev->dev, "regulator init failed for %d\n",
@@ -1366,6 +1456,12 @@ static struct platform_driver s2mps15_pmic_driver = {
 
 static int __init s2mps15_pmic_init(void)
 {
+	if(variant_aif_required == HAS_AIF) {
+		regulators = &regulators_T_W8;
+	} else {
+		regulators = &regulators_OTHER;
+	}
+
 	return platform_driver_register(&s2mps15_pmic_driver);
 }
 subsys_initcall(s2mps15_pmic_init);
