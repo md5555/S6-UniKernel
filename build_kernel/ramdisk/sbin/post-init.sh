@@ -1,11 +1,11 @@
 #!/system/bin/sh
 
 # Tweaks
-echo "100"	> /proc/sys/vm/swappiness
+echo "110"	> /proc/sys/vm/swappiness
 echo "35"	> /proc/sys/vm/vfs_cache_pressure
 echo "500"	> /proc/sys/vm/dirty_writeback_centisecs
 echo "1000"	> /proc/sys/vm/dirty_expire_centisecs
-echo "15"	> /sys/module/zswap/parameters/max_pool_percent
+echo "25"	> /sys/module/zswap/parameters/max_pool_percent
 
 # detect scheduler setting in build.prop if it exists
 if [ "`grep "kernel.scheduler=cfq" /system/build.prop`" != "" ]; then
@@ -36,8 +36,8 @@ elif [ "`grep "kernel.compressor=lz4" /system/build.prop`" != "" ]; then
 	swapoff /dev/block/vnswap0
 	chmod 0644 /sys/module/zswap/parameters/compressor
 	echo "lz4" > /sys/module/zswap/parameters/compressor
-	chmod 0444 /sys/module/zswap/parameters/compressor
 	echo "1932525568" > /sys/block/vnswap0/disksize
+	chmod 0444 /sys/module/zswap/parameters/compressor
 	mkswap /dev/block/vnswap0
 	swapon /dev/block/vnswap0
 elif [ "`grep "kernel.compressor=snappy" /system/build.prop`" != "" ]; then
@@ -63,20 +63,20 @@ sleep 5
 
 # Interactive tuning
 #set apollo interactive governor
-echo "15000 1296000:10000 1400000:5000" > /sys/devices/system/cpu/cpu0/cpufreq/interactive/above_hispeed_delay
+echo "10000 1296000:10000 1400000:5000" > /sys/devices/system/cpu/cpu0/cpufreq/interactive/above_hispeed_delay
 echo "95" 	> /sys/devices/system/cpu/cpu0/cpufreq/interactive/go_hispeed_load
 echo "90" 	> /sys/devices/system/cpu/cpu0/cpufreq/interactive/target_loads
-echo "5000"	> /sys/devices/system/cpu/cpu0/cpufreq/interactive/min_sample_time
-echo "25000"	> /sys/devices/system/cpu/cpu0/cpufreq/interactive/timer_rate
+echo "10000"	> /sys/devices/system/cpu/cpu0/cpufreq/interactive/min_sample_time
+echo "10000"	> /sys/devices/system/cpu/cpu0/cpufreq/interactive/timer_rate
 echo "3000"	> /sys/devices/system/cpu/cpu0/cpufreq/interactive/timer_slack
-echo "10000"	> /sys/devices/system/cpu/cpu0/cpufreq/interactive/boostpulse_duration
+echo "15000"	> /sys/devices/system/cpu/cpu0/cpufreq/interactive/boostpulse_duration
 
 #set atlas interactive governor
-echo "15000 1500000:15000 1800000:10000 2000000:5000" > /sys/devices/system/cpu/cpu4/cpufreq/interactive/above_hispeed_delay
+echo "10000 1500000:10000 1800000:10000 2000000:5000" > /sys/devices/system/cpu/cpu4/cpufreq/interactive/above_hispeed_delay
 echo "95" 	> /sys/devices/system/cpu/cpu4/cpufreq/interactive/go_hispeed_load
 echo "90" 	> /sys/devices/system/cpu/cpu4/cpufreq/interactive/target_loads
-echo "15000"	> /sys/devices/system/cpu/cpu4/cpufreq/interactive/min_sample_time
-echo "25000"	> /sys/devices/system/cpu/cpu4/cpufreq/interactive/timer_rate
+echo "10000"	> /sys/devices/system/cpu/cpu4/cpufreq/interactive/min_sample_time
+echo "10000"	> /sys/devices/system/cpu/cpu4/cpufreq/interactive/timer_rate
 echo "3000"	> /sys/devices/system/cpu/cpu4/cpufreq/interactive/timer_slack
-echo "10000"	> /sys/devices/system/cpu/cpu4/cpufreq/interactive/boostpulse_duration
+echo "15000"	> /sys/devices/system/cpu/cpu4/cpufreq/interactive/boostpulse_duration
 
